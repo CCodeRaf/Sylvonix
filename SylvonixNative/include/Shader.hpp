@@ -14,7 +14,8 @@ namespace SylvonixNative
     enum class ShaderType
     {
         Compute,
-        Graphics
+        Vertex,
+        Fragment
     };
 
     class Shader
@@ -25,6 +26,7 @@ namespace SylvonixNative
             VkDevice device,
             slang::IGlobalSession* globalSession,
             const std::string& path,
+            const std::string& name,
             ShaderType type
         );
 

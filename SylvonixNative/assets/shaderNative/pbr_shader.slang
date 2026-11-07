@@ -26,9 +26,15 @@ struct PBRMaterial
 [[vk::binding(0, 0)]]
 Sampler2D textures[];
 [[vk::binding(1, 0)]]
-StructuredBuffer<PBRMaterial> materials;
-[[vk::binding(2, 0)]]
+StructuredBuffer<PBRMaterial> pbr_materials;
+
+[[vk::binding(0, 1)]]
+StructuredBuffer<uint32_t> localMaterialIDs;
+[[vk::binding(1, 1)]]
 StructuredBuffer<uint16_t> primitiveMaterialIDs;
+
+[[vk::binding(0, 2)]]
+StructuredBuffer<uint32_t> materialOverrides;
 
 struct ShaderData
 {
@@ -37,6 +43,12 @@ struct ShaderData
     float4x4 model[3];
     float4 lightDir;
     uint32_t selected;
+};
+
+struct ObjectData
+{
+    float4x4 model;
+    uint32_t materialID;
 };
 
 struct VSOutput
@@ -149,7 +161,7 @@ float3 FresnelSchlickRoughness(
 [shader("vertex")]
 VSOutput main(
     VSInput input,
-    uniform ShaderData *shaderData,
+    uniform ShaderData *shaderData
     //uniform ObjectData *objectData,
     )
 {
@@ -216,7 +228,7 @@ float4 main(
     // --------------------------------------------------------
 
     uint materialID = primitiveMaterialIDs[triID];
-    PBRMaterial mat = materials[materialID];
+    PBRMaterial mat = pbr_materials[materialID];
 
     float3 baseColor = mat.baseColor;
 
@@ -318,7 +330,7 @@ float4 main(
         SKY_COLOR,
         skyFactor);
 
-    // Ambient diffuse: metallic materials have no diffuse lobe.
+    // Ambient diffuse: metallic pbr_materials have no diffuse lobe.
     float3 ambientDiffuse =
         ambientEnvironment *
         baseColor *

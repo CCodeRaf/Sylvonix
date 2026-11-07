@@ -96,36 +96,13 @@ namespace SylvonixNative
 				device->getDevice(),
 				slangSession.get(),
 				"assets/shaderNative/tonemap.slang",
+				"main",
 				ShaderType::Compute
 			);
 
 			std::cout << "\n";
 
 			std::cout << "Shader created\n";
-
-			std::cout << "\n";
-			std::cout << "===== REFLECTION =====\n";
-
-			for(const auto& parameter :
-				shader.GetParameters())
-			{
-				std::cout
-					<< "Name: "
-					<< parameter.name
-					<< "\n";
-
-				std::cout
-					<< "Binding: "
-					<< parameter.binding
-					<< "\n";
-
-				std::cout
-					<< "Set: "
-					<< parameter.set
-					<< "\n";
-			}
-
-			std::cout << "======================\n";
 		}
 	}
 

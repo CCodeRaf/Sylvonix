@@ -7,16 +7,39 @@ namespace SylvonixNative
 {
     enum class ShaderParameterType
     {
-        Unknown,
-
-        StorageImage,
-        SampledImage,
-
-        StorageBuffer,
         UniformBuffer,
+        StorageBuffer,
+
+        SampledImage,
+        StorageImage,
 
         Sampler
     };
+
+    inline const char* ShaderParamToString(
+        ShaderParameterType type)
+    {
+        switch(type)
+        {
+            case ShaderParameterType::UniformBuffer:
+                return "UniformBuffer";
+
+            case ShaderParameterType::StorageBuffer:
+                return "StorageBuffer";
+
+            case ShaderParameterType::SampledImage:
+                return "SampledImage";
+
+            case ShaderParameterType::StorageImage:
+                return "StorageImage";
+
+            case ShaderParameterType::Sampler:
+                return "Sampler";
+
+            default:
+                return "Unknown";
+        }
+    }
 
     struct ShaderParameter
     {
