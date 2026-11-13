@@ -2,9 +2,10 @@
 #include <string>
 #include <Type.hpp>
 
+class SylvonixShader;
+
 namespace SylvonixNative
 {
-	class Shader;
 
 	struct WindowDescriptor
 	{
@@ -53,6 +54,6 @@ namespace SylvonixNative
 
 	struct ComputePipelineDescriptor
     {
-        Shader* shader{};
+        SylvonixShader* shader{};
     };
 }

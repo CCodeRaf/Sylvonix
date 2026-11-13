@@ -5,7 +5,7 @@
 
 #include <VulkanCommon.hpp>
 #include <Descriptors.hpp>
-#include <Shader.hpp>
+#include <SylvonixShader.hpp>
 
 namespace SylvonixNative
 {

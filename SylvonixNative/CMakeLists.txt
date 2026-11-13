@@ -16,7 +16,6 @@ set(SYLVONIX_NATIVE_SOURCES
     src/Window.cpp
     src/SwapChain.cpp
     src/Image.cpp
-    src/Shader.cpp
     src/ComputePipeline.cpp
     src/Buffer.cpp
 )
@@ -33,6 +32,8 @@ target_include_directories(SylvonixNative PRIVATE
 target_include_directories(SylvonixNative PRIVATE
     C:/Dev/SDL3-3.4.2/include
 )
+
+target_include_directories(SylvonixNative PRIVATE "C:/Projects/Sylvonix-Shader/SVShaderLib/include")
 
 target_link_libraries(SylvonixNative PRIVATE
     C:/Dev/SDL3-3.4.2/lib/x64/SDL3.lib
@@ -79,21 +80,10 @@ target_include_directories(SylvonixNative PRIVATE
     "C:/Program Files/KTX-Software/include"
 )
 
+target_link_directories(SylvonixNative PRIVATE "C:/Projects/Sylvonix-Shader/SVShaderLib/out/build/")
+target_link_libraries(SylvonixNative PRIVATE "debug/SVShaderLib")
+
 target_link_libraries(SylvonixNative PRIVATE ${KTX_LIBRARY})
-
-
-# --- Slang from Vulkan SDK ---
-find_library(Slang_LIBRARY
-    NAMES slang slang-compiler
-    HINTS "$ENV{VULKAN_SDK}/lib"
-    REQUIRED
-)
-
-target_include_directories(SylvonixNative PRIVATE
-    "$ENV{VULKAN_SDK}/include"
-)
-
-target_link_libraries(SylvonixNative PRIVATE ${Slang_LIBRARY})
 
 target_compile_definitions(SylvonixNative PRIVATE
     VK_NO_PROTOTYPES

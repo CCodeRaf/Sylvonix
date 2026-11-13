@@ -2,7 +2,7 @@
 
 #include <unordered_map>
 
-#include <Shader.hpp>
+#include <SylvonixShader.hpp>
 #include <Image.hpp>
 #include <Buffer.hpp>
 
@@ -57,8 +57,6 @@ namespace SylvonixNative
 
         VkDevice device{};
 
-        Shader* shader{};
-
         VkPipeline pipeline{};
         VkPipelineLayout pipelineLayout{};
 
@@ -75,5 +73,11 @@ namespace SylvonixNative
             std::string,
             Resource
         > resources;
+
+    private:
+
+        SylvonixShader* shader{};
+
+        VkShaderModule shaderModule{};
     };
 }

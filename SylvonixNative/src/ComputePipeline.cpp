@@ -19,7 +19,8 @@ namespace SylvonixNative
             .sType =
                 VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
             .setLayoutCount = 1,
-            .pSetLayouts = &descriptorSetLayout
+            .pSetLayouts =
+                &descriptorSetLayout
         };
 
         chk(vkCreatePipelineLayout(
@@ -29,21 +30,47 @@ namespace SylvonixNative
             &pipelineLayout
         ));
 
+        const auto& spirv =
+            shader->GetSpirv(
+                "main",
+                SVShaderStageType::Compute
+            );
+
+        VkShaderModuleCreateInfo moduleCI{
+            .sType =
+                VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+            .codeSize =
+                spirv.size()
+                    * sizeof(uint32_t),
+            .pCode =
+                spirv.data()
+        };
+
+        chk(vkCreateShaderModule(
+            device,
+            &moduleCI,
+            nullptr,
+            &shaderModule
+        ));
+
         VkPipelineShaderStageCreateInfo stageCI{
             .sType =
                 VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
             .stage =
                 VK_SHADER_STAGE_COMPUTE_BIT,
             .module =
-                shader->GetModule(),
-            .pName = "main"
+                shaderModule,
+            .pName =
+                "main"
         };
 
         VkComputePipelineCreateInfo pipelineCI{
             .sType =
                 VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
-            .stage = stageCI,
-            .layout = pipelineLayout
+            .stage =
+                stageCI,
+            .layout =
+                pipelineLayout
         };
 
         chk(vkCreateComputePipelines(
@@ -144,70 +171,11 @@ namespace SylvonixNative
 
     void ComputePipeline::BuildDescriptorSetLayout()
     {
-        std::vector<VkDescriptorSetLayoutBinding>
-            bindings;
-
-        for (const auto& parameter :
-            shader->GetParameters())
-        {
-            VkDescriptorSetLayoutBinding binding{};
-
-            binding.binding =
-                parameter.binding;
-
-            binding.descriptorCount = 1;
-
-            binding.stageFlags =
-                VK_SHADER_STAGE_COMPUTE_BIT;
-
-            switch(parameter.type)
-            {
-                case ShaderParameterType::StorageImage:
-                {
-                    binding.descriptorType =
-                        VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-                    break;
-                }
-
-                case ShaderParameterType::SampledImage:
-                {
-                    binding.descriptorType =
-                        VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                    break;
-                }
-
-                case ShaderParameterType::StorageBuffer:
-                {
-                    binding.descriptorType =
-                        VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-                    break;
-                }
-
-                case ShaderParameterType::UniformBuffer:
-                {
-                    binding.descriptorType =
-                        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                    break;
-                }
-
-                default:
-                    continue;
-            }
-
-            bindings.push_back(
-                binding
-            );
-        }
-
         VkDescriptorSetLayoutCreateInfo ci{
             .sType =
                 VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-            .bindingCount =
-                static_cast<uint32_t>(
-                    bindings.size()
-                ),
-            .pBindings =
-                bindings.data()
+            .bindingCount = 0,
+            .pBindings = nullptr
         };
 
         chk(vkCreateDescriptorSetLayout(
@@ -220,57 +188,13 @@ namespace SylvonixNative
 
     void ComputePipeline::AllocateDescriptors()
     {
-        std::vector<VkDescriptorPoolSize>
-            poolSizes;
-
-        for(const auto& parameter :
-            shader->GetParameters())
-        {
-            VkDescriptorPoolSize size{};
-
-            size.descriptorCount = 1;
-
-            switch(parameter.type)
-            {
-                case ShaderParameterType::StorageImage:
-                    size.type =
-                        VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-                    break;
-
-                case ShaderParameterType::SampledImage:
-                    size.type =
-                        VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                    break;
-
-                case ShaderParameterType::StorageBuffer:
-                    size.type =
-                        VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-                    break;
-
-                case ShaderParameterType::UniformBuffer:
-                    size.type =
-                        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                    break;
-
-                default:
-                    continue;
-            }
-
-            poolSizes.push_back(
-                size
-            );
-        }
-
         VkDescriptorPoolCreateInfo poolCI{
             .sType =
                 VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+            .flags = 0,
             .maxSets = 1,
-            .poolSizeCount =
-                static_cast<uint32_t>(
-                    poolSizes.size()
-                ),
-            .pPoolSizes =
-                poolSizes.data()
+            .poolSizeCount = 0,
+            .pPoolSizes = nullptr
         };
 
         chk(vkCreateDescriptorPool(
@@ -299,106 +223,22 @@ namespace SylvonixNative
 
     void ComputePipeline::UpdateDescriptors()
     {
-        std::vector<VkWriteDescriptorSet>
-            writes;
+        /*
+            TODO:
 
-        std::vector<VkDescriptorImageInfo>
-            imageInfos;
+            Rebuild descriptor reflection
+            using SylvonixShader resources.
 
-        std::vector<VkDescriptorBufferInfo>
-            bufferInfos;
+            Future code will use:
 
-        for (const auto& parameter :
-            shader->GetParameters())
-        {
-            auto found =
-                resources.find(
-                    parameter.name
-                );
+            shader->GetResources()
 
-            if(found ==
-                resources.end())
-            {
-                continue;
-            }
+            and eventually:
 
-            const auto& resource =
-                found->second;
+            resource.GetType()
 
-            if(resource.image)
-            {
-                imageInfos.push_back({
-                    .sampler =
-                        VK_NULL_HANDLE,
-                    .imageView =
-                        resource.image->GetView(),
-                    .imageLayout =
-                        VK_IMAGE_LAYOUT_GENERAL
-                });
-
-                writes.push_back({
-                    .sType =
-                        VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                    .dstSet =
-                        descriptorSet,
-                    .dstBinding =
-                        parameter.binding,
-                    .descriptorCount = 1,
-                    .descriptorType =
-                        VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
-                    .pImageInfo =
-                        &imageInfos.back()
-                });
-            }
-
-            if(resource.buffer)
-            {
-                bufferInfos.push_back({
-                    .buffer =
-                        resource.buffer->GetBuffer(),
-                    .offset = 0,
-                    .range =
-                        resource.buffer->GetSize()
-                });
-
-                VkDescriptorType type =
-                    VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-
-                if(parameter.type ==
-                    ShaderParameterType::
-                        UniformBuffer)
-                {
-                    type =
-                        VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                }
-
-                writes.push_back({
-                    .sType =
-                        VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                    .dstSet =
-                        descriptorSet,
-                    .dstBinding =
-                        parameter.binding,
-                    .descriptorCount = 1,
-                    .descriptorType =
-                        type,
-                    .pBufferInfo =
-                        &bufferInfos.back()
-                });
-            }
-        }
-
-        if(!writes.empty())
-        {
-            vkUpdateDescriptorSets(
-                device,
-                static_cast<uint32_t>(
-                    writes.size()
-                ),
-                writes.data(),
-                0,
-                nullptr
-            );
-        }
+            once resource types are added
+            to the SVShader format.
+        */
     }
 }

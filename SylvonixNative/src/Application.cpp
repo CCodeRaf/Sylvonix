@@ -3,6 +3,7 @@
 #include <Device.hpp>
 #include <Window.hpp>
 #include <SwapChain.hpp>
+#include <filesystem>
 
 namespace SylvonixNative
 {
@@ -82,27 +83,60 @@ namespace SylvonixNative
 		};
 		swapChain = std::make_unique<SwapChain>(swapVKObjects);
 
-		// Reflection test
+		SylvonixShader shader(
+			"assets/shaderNative/pbr_shader.svshader"
+		);
+
+		try
 		{
-			Slang::ComPtr<slang::IGlobalSession> slangSession;
+			const auto& computeSpirv =
+				shader.GetSpirv(
+					"main",
+					SVShaderStageType::Vertex
+				);
 
-			slang::createGlobalSession(
-				slangSession.writeRef()
-			);
+			std::cout
+				<< "Vertex SPIR-V Size: "
+				<< computeSpirv.size()
+				<< "\n";
 
-			std::cout << "Creating shader\n";
+			uint32_t binding =
+				shader.GetBinding(
+					"pbr_materials"
+				);
 
-			Shader shader(
-				device->getDevice(),
-				slangSession.get(),
-				"assets/shaderNative/tonemap.slang",
-				"main",
-				ShaderType::Compute
-			);
+			uint32_t set =
+				shader.GetSet(
+					"pbr_materials"
+				);
 
-			std::cout << "\n";
+			std::cout
+				<< "pbr_materials\n";
 
-			std::cout << "Shader created\n";
+			std::cout
+				<< "  Set: "
+				<< set
+				<< "\n";
+
+			std::cout
+				<< "  Binding: "
+				<< binding
+				<< "\n";
+
+			std::cout
+				<< "Reverse Lookup: "
+				<< shader.GetName(
+					set,
+					binding
+				)
+				<< "\n";
+		}
+		catch(const std::exception& e)
+		{
+			std::cout
+				<< "SVShader Error: "
+				<< e.what()
+				<< "\n";
 		}
 	}
 
